@@ -1,0 +1,116 @@
+#include<iostream>
+#include<map>
+#include<vector>
+
+using namespace std;
+
+int c=0;
+int p=0;
+int n=0;
+
+vector<int> path={};
+
+map<int,pair<int,int> > m;
+m[1]=make_pair(-3,0);
+m[2]=make_pair(-2,0);
+m[3]=make_pair(-1,0);
+m[4]=make_pair(0,0);
+m[5]=make_pair(1,0);
+m[6]=make_pair(2,0);
+m[7]=make_pair(3,0);
+m[8]=make_pair(-1,1);
+m[9]=make_pair(0,1);
+m[10]=make_pair(1,1);
+m[11]=make_pair(0,2);
+m[12]=make_pair(-3,2);
+m[13]=make_pair(-2,2);
+m[14]=make_pair(2,2);
+m[15]=make_pair(3,2);
+m[16]=make_pair(-3,3);
+m[17]=make_pair(-2,3);
+m[18]=make_pair(-1,3);
+m[19]=make_pair(0,3);
+m[20]=make_pair(1,3);
+m[21]=make_pair(2,3);
+m[22]=make_pair(3,3);
+m[23]=make_pair(0,-1);
+
+int bot_ang(int x1,int y1,int x2,int y2)
+{
+    int dx=x2-x1;
+    int dy=y2-y1;
+    if(dx>0 && dy==0)
+    return(0);
+    else if(dx>0 && dy>0)
+    return(45);
+    else if(dx==0 && dy>0)
+    return(90);
+    else if(dx<0 && dy>0)
+    return(135);
+    else if(dx<0 && dy==0)
+    return(180);
+    else if(dx<0 && dy<0)
+    return(225);
+    else if(dx==0 && dy<0)
+    return(270);
+    else if(dx>0 && dy<0)
+    return(315);
+}
+
+
+int dir_ang(int x1,int y1,int x2,int y2)
+{
+    int dx=x2-x1;
+    int dy=y2-y1;
+    if(dx>0 && dy==0)
+    return(0);
+    else if(dx>0 && dy>0)
+    return(45);
+    else if(dx==0 && dy>0)
+    return(90);
+    else if(dx<0 && dy>0)
+    return(135);
+    else if(dx<0 && dy==0)
+    return(180);
+    else if(dx<0 && dy<0)
+    return(225);
+    else if(dx==0 && dy<0)
+    return(270);
+    else if(dx>0 && dy<0)
+    return(315);
+}
+
+int direc(int p,int c,int n)
+{
+  if(c==n)
+  return(4);//backward
+  else if(p==c)
+  return(1);
+  int x1=m[p].first,y1=m[p].second;
+  int x2=m[c].first,y2=m[p].second;
+  int x3=m[n].first,y3=m[n].second;
+  int bot=bot_ang(x1,y1,x2,y2);
+  int dir=dir_ang(x2,y2,x3,y3);
+  if(bot==dir)
+  return(1);//forward
+  else if(bot<dir)
+  return(2);//left
+  else 
+  return(3);//right
+}
+
+void follow()
+{
+    int i=1;
+    int c=path[0];
+    int p=c;
+    while(i!=path.size())
+    {
+        n=path[i];
+        int me=direc(p,c,n);
+        line_follow(me);
+        p=c;
+        c=n;
+        ++i;
+    }
+}

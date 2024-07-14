@@ -1,0 +1,467 @@
+/*Team Id: 687
+
+*Author List: Pallav Totawat, Akansh Jain, Dev Garg , Aakash Mathur
+
+*Filename: NS_Task_1_Sandbox.h
+
+*Theme: Nutty Squirrel -- Specific to eYRC
+
+*Functions: forward_wls,left_turn_wls,right_turn_wls,Square,Hardcode,Task_1_1;
+
+*Global Variables: left_sensor_reading, middle_sensor_reading, right_sensor_reading   */
+
+#include "NS_Task_1_Sandbox.h"
+using namespace std;
+int c = 0;
+int p = 0;
+int n = 0;
+
+int m1[24] = { 0,-5,-4,-3,0,1,2,3,-2,0,1,0,-5,-2,2,3,-3,-5,-1,0,1,2,3,0 };
+int m2[24] = { 0,0,0,0,0,0,0,0,1,1,1,2,2,2,2,2,3,3,3,3,3,3,3,-1 };
+int path[9] = { 4,9,11,8,13,12,1,2,3 };
+
+	int bot_ang(int x1, int y1, int x2, int y2)
+	{
+		int dx = x2 - x1;
+		int dy = y2 - y1;
+		if (dx > 0 && dy == 0)
+			return(0);
+		else if (dx > 0 && dy > 0)
+			return(45);
+		else if (dx == 0 && dy > 0)
+			return(90);
+		else if (dx < 0 && dy>0)
+			return(135);
+		else if (dx < 0 && dy == 0)
+			return(180);
+		else if (dx < 0 && dy < 0)
+			return(225);
+		else if (dx == 0 && dy < 0)
+			return(270);
+		else if (dx > 0 && dy < 0)
+			return(315);
+	}
+
+
+	int dir_ang(int x1, int y1, int x2, int y2)
+	{
+		int dx = x2 - x1;
+		int dy = y2 - y1;
+		if (dx > 0 && dy == 0)
+			return(0);
+		else if (dx > 0 && dy > 0)
+			return(45);
+		else if (dx == 0 && dy > 0)
+			return(90);
+		else if (dx < 0 && dy>0)
+			return(135);
+		else if (dx < 0 && dy == 0)
+			return(180);
+		else if (dx < 0 && dy < 0)
+			return(225);
+		else if (dx == 0 && dy < 0)
+			return(270);
+		else if (dx > 0 && dy < 0)
+			return(315);
+	}
+
+	int direc(int p, int c, int n)
+	{
+		if (c == n)
+			return(4);//backward
+		else if (p == c)
+			return(1);
+		int x1 = m1[p], y1 = m2[p];
+		int x2 = m1[c], y2 = m2[p];
+		int x3 = m1[n], y3 = m2[n];
+		int bot = bot_ang(x1, y1, x2, y2);
+		int dir = dir_ang(x2, y2, x3, y3);
+		if (bot == dir)
+			return(1);//forward
+		else if (bot < dir)
+			return(2);//left
+		else
+			return(3);//right
+	}
+
+	void follow()
+	{
+		int i = 1;
+		int c = path[0];
+		int p = c;
+		while (i != 9)
+		{
+			n = path[i];
+			int me = direc(p, c, n);
+			//line_follow(me);
+			if (me == 1) {
+				forward();
+				_delay_ms(20);
+				forward_wls();
+			}
+			else if (me == 2)
+			{
+				right();
+				_delay_ms(20);
+				right_turn_wls();
+			}
+			else if (me == 3)
+			{
+				left();
+				_delay_ms(20);
+				left_turn_wls();
+
+			}
+			else if(me==4){
+				back();
+
+			}
+			p = c;
+			c = n;
+			++i;
+		}
+	}
+/*
+*
+* Function Name: forward_wls
+* Input: node
+* Output: void
+* Logic: Uses white line sensors to go forward by the number of nodes specified 
+      #### this also haas the code to line following process####
+* Example Call: forward_wls(2); //Goes forward by two nodes
+*
+*/
+
+unsigned char left_sensor_reading, middle_sensor_reading, right_sensor_reading;
+void forward_wls(void)
+{ 
+	
+	int node_number = 1;//the number of node which is coming up next.
+
+
+	
+	while (1)//infinte loop for continues readings and actions.
+	{
+		/*if (node_number > node)
+		{
+			printf("END");
+			break;
+		}*/
+	
+		left_sensor_reading = ADC_Conversion(1);
+		middle_sensor_reading = ADC_Conversion(2);
+		right_sensor_reading = ADC_Conversion(3);
+		//printf("\n     %d   %d		%d    ", left_sensor_reading, middle_sensor_reading, right_sensor_reading);
+		if (left_sensor_reading > 180 && middle_sensor_reading > 180 && right_sensor_reading > 180)// appropriate thresholding if the reading of sensor is less than 100 it will be concidered white and black for more than 180
+		{  /*this part of code makes the bot to use the hardcore
+		     function which tells the furthur steps 
+		     each time a node is detected */
+			////////////////////Hardcode(node_number);//Hardcode is the function which has the code to movement at the nodes
+			//printf("\n%d",node);
+			forward();
+			_delay_ms(5);
+			node_number++;
+		}
+		else if (left_sensor_reading < 100 && middle_sensor_reading>180 && right_sensor_reading < 100)
+		{/*this part is for making the bot move strainght when 2 sensor are on white and middle one is at black*/
+			//printf("forward \n");
+			forward();
+			_delay_ms(5);
+		     velocity(50, 50);
+			
+		}
+		else if (left_sensor_reading < 100 && middle_sensor_reading < 100 && right_sensor_reading < 100)
+		{/*this part is for making the bot move back to path if all the sensor are on white part of track*/
+			//printf("back");
+			back();
+			velocity(20, 20);
+			
+		}
+		else if ((left_sensor_reading > 180 && middle_sensor_reading < 100 && right_sensor_reading < 100) || (left_sensor_reading >180 && middle_sensor_reading >180 && right_sensor_reading <100) )
+		{/*this is to make the bot to rotate left when the left sensor comes on the black path and deviates the bot 
+		 this will make it to correct its motion*/
+			left();
+			velocity(10, 10);
+			_delay_ms(20);
+			
+			//printf("left \n");
+			//left_turn_wls();
+			
+			
+		}
+		else if ((left_sensor_reading <100 && middle_sensor_reading < 100 && right_sensor_reading> 180) || (left_sensor_reading < 100 && middle_sensor_reading > 180 && right_sensor_reading >180))
+		{/*this is to make the bot to rotate right when the left sensor comes on the black path and deviates the bot 
+		 this will make it to correct its motion*/
+			right();
+			//right_turn_wls();
+			velocity(10, 10);
+			//printf("right \n");
+		}
+		/*else if (left_sensor_reading > 180 && middle_sensor_reading > 180 && right_sensor_reading > 180)
+		{
+			printf("\n break");
+			break;
+			
+		}*/
+		
+		
+	}
+
+}
+/*
+*
+* Function Name: left_turn_wls
+* Input: void
+* Output: void
+* Logic: Uses white line sensors to turn left until black line is encountered
+* Example Call: left_turn_wls(); //Turns right until black line is encountered
+*
+*/
+void left_turn_wls(void)
+{/*moves the bot to the left till it align with a  black path */
+	int c = 0;//this value of c was used to keep track of process 
+	while (1)
+	{
+		left_sensor_reading = ADC_Conversion(1);
+		middle_sensor_reading = ADC_Conversion(2);
+		right_sensor_reading = ADC_Conversion(3);
+		left();
+		velocity(10, 10);
+		_delay_ms(20);
+		c++;
+		//printf("left in left turn %d", c);
+		if (left_sensor_reading < 100 && middle_sensor_reading>180 && right_sensor_reading < 100 )//|| ls > 180 && cs>180 && rs < 100)
+		{/*breaks the loop after it aligns with the path*/
+			stop();
+			break;
+		}
+
+	}
+
+}
+
+/*
+*
+* Function Name: right_turn_wls
+* Input: void
+* Output: void
+* Logic: Uses white line sensors to turn right until black line is encountered
+* Example Call: right_turn_wls(); //Turns right until black line is encountered
+*/
+void right_turn_wls(void)
+{/*rotates the bot to right till it aligns with the black path*/
+int c = 0;
+	while (1)
+	{
+		
+		left_sensor_reading = ADC_Conversion(1);
+		middle_sensor_reading = ADC_Conversion(2);
+		right_sensor_reading = ADC_Conversion(3);
+		//printf("\nright in right turn %d %d %d", left_sensor_reading,middle_sensor_reading,right_sensor_reading);
+		_delay_ms(20);/*appropriate delay after trying*/
+		right();
+		velocity(10, 10);
+		_delay_ms(20); /*appropriate delay after trying*/
+		
+		c++;
+		if ( middle_sensor_reading>180 && left_sensor_reading<100 && right_sensor_reading<100) 
+		{/*breaks the loop after it aligns with the path*/
+			stop();
+			break;
+		}
+		
+	}
+
+
+}
+
+/*
+*
+* Function Name: Square
+* Input: void
+* Output: void
+* Logic: Use this function to make the robot trace a square path on the arena
+* Example Call: Square();
+*/
+void Square(void)
+{
+	/*forward();
+    _delay_ms(500);
+	right();
+	_delay_ms(128);
+	forward();
+	_delay_ms(500);
+	right();
+	_delay_ms(128);
+	forward();
+	_delay_ms(500);
+	right();
+	_delay_ms(128);
+	forward();
+	_delay_ms(500);
+	right();
+	_delay_ms(128);
+
+	left();
+	_delay_ms(512);
+	*/
+}
+
+
+/*
+*
+* Function Name: Task_1_1
+* Input: void
+* Output: void
+* Logic: Use this function to encapsulate your Task 1.1 logic
+* Example Call: Task_1_1();
+*/
+void Task_1_1(void)
+{
+	printf("Start");
+	forward_wls(11);
+}
+
+/*
+*
+* Function Name: Task_1_2
+* Input: void
+* Output: void
+* Logic: Use this function to encapsulate your Task 1.2 logic
+* Example Call: Task_1_2();
+*/
+void Task_1_2(void)
+{
+	/*m[1] = make_pair(-5, 0);
+	m[2] = make_pair(-4, 0);
+	m[3] = make_pair(-3, 0);
+	m[4] = make_pair(0, 0);
+	m[5] = make_pair(1, 0);
+	m[6] = make_pair(2, 0);
+	m[7] = make_pair(3, 0);
+	m[8] = make_pair(-2, 1);
+	m[9] = make_pair(0, 1);
+	m[10] = make_pair(1, 1);
+	m[11] = make_pair(0, 2);
+	m[12] = make_pair(-5, 2);
+	m[13] = make_pair(-2, 2);
+	m[14] = make_pair(2, 2);
+	m[15] = make_pair(3, 2);
+	m[16] = make_pair(-3, 3);
+	m[17] = make_pair(-5, 3);
+	m[18] = make_pair(-1, 3);
+	m[19] = make_pair(0, 3);
+	m[20] = make_pair(1, 3);
+	m[21] = make_pair(2, 3);
+	m[22] = make_pair(3, 3);
+	m[23] = make_pair(0, -1);*/
+	follow();
+}
+void Hardcode(int x)//this is the function whiich decides the path after a node is reached
+{/*x takes the value of node which is reached*/
+	/*#####we have used appropriate delays and velocities to run the bot properly at each node*/
+	printf("\nhardcode %d" ,x);
+	if(x==1) /*the first "if statement"in the  "forward_wls" passes x = 1 when reaches the node and then it decides the 
+			 future path according to the track */
+	{
+		stop();
+		forward();
+		_delay_ms(100);/*appropriate delays*/
+		right_turn_wls();
+		
+	}
+	else if(x==2) 
+	{
+		forward();
+		_delay_ms(500);/*appropriate delays*/
+		stop();
+		left();
+		_delay_ms(80);
+
+		left_turn_wls();
+		
+	}
+	else if (x == 3)
+	{
+		forward();
+		_delay_ms(500);/*appropriate delays*/
+	}
+	else if(x == 4)
+	{
+		forward();
+		_delay_ms(400);/*appropriate delays*/
+		left_turn_wls();
+		
+	}
+	else if (x == 5)
+	{
+		forward();
+		_delay_ms(400);/*appropriate delays*/
+		left_turn_wls();
+	}
+	else if (x == 6)
+	{
+		forward();
+		_delay_ms(200);/*appropriate delays*/
+		stop();
+		_delay_ms(1000);
+		right();
+		_delay_ms(75);
+		
+		stop();
+		_delay_ms(2000);/*appropriate delays*/
+		right_turn_wls();
+		
+	
+	}
+	else if(x==7)
+	{
+		stop();
+		_delay_ms(100);
+		forward();
+		_delay_ms(200);
+		right();
+		_delay_ms(75);/*appropriate delays*/
+		right_turn_wls();
+		
+	}
+	else if (x == 8)
+	{
+		forward();
+		_delay_ms(300);
+		right();
+		_delay_ms(30);
+	}
+	else if (x == 9)
+	{
+		forward();
+		_delay_ms(300);
+		stop();
+		_delay_ms(100);
+		left();
+		_delay_ms(100);
+		left_turn_wls();
+	}
+	else if (x == 10)
+	{
+		forward();
+		_delay_ms(200);
+		right_turn_wls();
+	}
+	else if (x == 11)
+	{
+		forward();
+		_delay_ms(200);
+		left();
+		_delay_ms(80);
+		left_turn_wls();
+	}
+	else
+	{
+		stop();
+		_delay_ms(5000);
+		exit(0);
+	}
+	//printf("ENDS");
+
+}
